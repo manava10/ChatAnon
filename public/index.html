@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatConnect - Anonymous Chat</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .chat-app {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 400px;
+      height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .chat-header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .next-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .next-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .next-btn.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .next-btn:active {
+      transform: translateY(0);
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #f8fafc;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+
+    .message-container {
+      margin: 12px 0;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message {
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      word-wrap: break-word;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .message.sent {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 6px;
+    }
+
+    .message.received {
+      background: white;
+      color: #333;
+      margin-right: auto;
+      border-bottom-left-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .system-message {
+      text-align: center;
+      color: #64748b;
+      font-style: italic;
+      font-size: 0.9rem;
+      margin: 16px 0;
+      padding: 8px;
+      background: rgba(100, 116, 139, 0.1);
+      border-radius: 12px;
+    }
+
+    .chat-input-container {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 25px;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .chat-input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .send-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .send-btn:active {
+      transform: translateY(0);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .typing-indicator {
+      display: none;
+      padding: 12px 16px;
+      color: #64748b;
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+
+    .typing-dots {
+      display: inline-block;
+    }
+
+    .typing-dots::after {
+      content: '';
+      animation: typing 1.5s infinite;
+    }
+
+    @keyframes typing {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+
+    .welcome-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .welcome-icon {
+      font-size: 4rem;
+      color: #667eea;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      60% { transform: translateY(-5px); }
+    }
+
+    .welcome-text {
+      color: #64748b;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    .name-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .name-modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    .name-modal h2 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+    }
+
+    .name-modal p {
+      color: #64748b;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .name-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    }
+
+    .name-input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .name-submit-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .name-submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .name-submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .name-submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .partner-name {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 480px) {
+      .chat-app {
+        width: 95%;
+        height: 90vh;
+        border-radius: 15px;
+      }
+      
+      .chat-header {
+        padding: 15px;
+      }
+      
+      .chat-header h1 {
+        font-size: 1.3rem;
+      }
+
+      .next-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Name Input Modal -->
+  <div id="name-modal" class="name-modal">
+    <div class="name-modal-content">
+      <h2><i class="fas fa-user"></i> Welcome to ChatConnect!</h2>
+      <p>Enter your name to start chatting with anonymous partners around the world.</p>
+      <input 
+        type="text" 
+        id="name-input" 
+        class="name-input" 
+        placeholder="Enter your name..." 
+        maxlength="20"
+        autocomplete="off"
+      />
+      <button id="name-submit" class="name-submit-btn">
+        <i class="fas fa-rocket"></i> Start Chatting
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-app">
+    <div class="chat-header">
+      <div class="header-left">
+        <h1><i class="fas fa-comments"></i> ChatConnect</h1>
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span id="status">Connecting...</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <span id="partner-name" class="partner-name" style="display: none;"></span>
+        <button id="next-btn" class="next-btn">
+          <i class="fas fa-forward"></i>
+          Next
+        </button>
+      </div>
+    </div>
+    
+    <div class="chat-messages" id="messages">
+      <div class="welcome-screen">
+        <div class="welcome-icon">
+          <i class="fas fa-user-friends"></i>
+        </div>
+        <div class="welcome-text">
+          Welcome to ChatConnect!<br>
+          We're finding you a chat partner...
+        </div>
+      </div>
+    </div>
+    
+    <div class="typing-indicator" id="typing">
+      <span class="typing-dots">Partner is typing</span>
+    </div>
+    
+    <div class="chat-input-container">
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="input" 
+          class="chat-input" 
+          placeholder="Type your message..." 
+          autocomplete="off"
+          disabled
+        />
+        <button id="send" class="send-btn" disabled>
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html> 
