@@ -439,6 +439,11 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Keep-alive endpoint
+app.get('/ping', (req, res) => {
+  res.json({ status: 'alive', timestamp: new Date().toISOString() });
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
